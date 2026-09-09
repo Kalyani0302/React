@@ -1,99 +1,118 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import './App.css'
 
-const employeeList = [
-  {
-    id: 1,
-    name: 'Ananya',
-    age: 25,
-    city: 'Mumbai',
-    email: 'ananya@gmail.com',
-    role: 'Frontend Developer'
-  },
-  {
-    id: 2,
-    name: 'Vikram',
-    age: 28,
-    city: 'Pune',
-    email: 'vikram@gmail.com',
-    role: 'Backend Developer'
-  },
-  {
-    id: 3,
-    name: 'Meera',
-    age: 24,
-    city: 'Chennai',
-    email: 'meera@gmail.com',
-    role: 'UI Designer'
-  },
-  {
-    id: 4,
-    name: 'Rahul',
-    age: 27,
-    city: 'Delhi',
-    email: 'rahul@gmail.com',
-    role: 'Project Manager'
-  },
-  {
-    id: 5,
-    name: 'Sai',
-    age: 23,
-    city: 'Hyderabad',
-    email: 'sai@gmail.com',
-    role: 'QA Engineer'
-  }
-]
+const apiUrl = 'https://jsonplaceholder.typicode.com/users'
 
 function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(true)
+  const [users, setUsers] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [errorMessage, setErrorMessage] = useState('')
+  const [imagePreview, setImagePreview] = useState('')
+  const fileInputRef = useRef(null)
+
+  useEffect(() => {
+    async function fetchUsers() {
+      try {
+        const response = await fetch(apiUrl)
+        if (!response.ok) throw new Error('Unable to load user data.')
+        setUsers(await response.json())
+      } catch (error) {
+        setErrorMessage(error.message)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchUsers()
+  }, [])
+
+  function handleUploadClick() {
+    fileInputRef.current?.click()
+  }
+
+  function handleImageChange(event) {
+    const selectedFile = event.target.files?.[0]
+    if (!selectedFile || !selectedFile.type.startsWith('image/')) return
+
+    const imageUrl = URL.createObjectURL(selectedFile)
+    setImagePreview((previousUrl) => {
+      if (previousUrl) URL.revokeObjectURL(previousUrl)
+      return imageUrl
+    })
+  }
 
   return (
-    <main className="task3-page">
-      <section className="task3-container">
-        <header className="task3-header">
-          <span className="task3-label">Task 3</span>
-          <h1>Conditional Rendering &amp; List Rendering</h1>
+    <main className="task6-page">
+      <section className="task6-container">
+        <header className="task6-header">
+          <span className="task6-label">Task 6</span>
+          <h1>API Integration &amp; Image Upload</h1>
+          <p>Using useEffect, useRef, useState, and conditional rendering</p>
         </header>
 
-        <div className="status-panel">
-          {isLoggedIn ? (
-            <div className="status-box welcome-box">
-              <h2>Welcome Back!</h2>
-              <p>You are logged in successfully.</p>
-            </div>
-          ) : (
-            <div className="status-box login-box">
-              <h2>Please Login</h2>
-              <p>Please sign in to continue.</p>
-            </div>
-          )}
-
-          <button type="button" className="toggle-button" onClick={() => setIsLoggedIn(!isLoggedIn)}>
-            {isLoggedIn ? 'Logout' : 'Login'}
-          </button>
-        </div>
-
-        <div className="employee-section">
-          <h3>Employee List</h3>
-          <div className="employee-list">
-            {employeeList.map((employee) => (
-              <div key={employee.id} className="employee-card">
-                <h4>{employee.name}</h4>
-                <p>
-                  <strong>Age:</strong> {employee.age}
-                </p>
-                <p>
-                  <strong>City:</strong> {employee.city}
-                </p>
-                <p>
-                  <strong>Email:</strong> {employee.email}
-                </p>
-                <p>
-                  <strong>Role:</strong> {employee.role}
-                </p>
+        <div className="task6-layout">
+          <section className="upload-panel">
+            <div className="section-heading">
+              <span className="section-number">01</span>
+              <div>
+                <h2>Image Upload</h2>
+                <p>Select an image and preview it instantly.</p>
               </div>
-            ))}
-          </div>
+            </div>
+
+            <div className={`image-preview ${imagePreview ? 'has-image' : ''}`}>
+              {imagePreview ? (
+                <img src={imagePreview} alt="Selected preview" />
+              ) : (
+                <>
+                  <span className="upload-icon">+</span>
+                  <strong>No image selected</strong>
+                  <span>PNG, JPG, or WEBP</span>
+                </>
+              )}
+            </div>
+
+            <input ref={fileInputRef} className="hidden-file-input" type="file" accept="image/*" onChange={handleImageChange} />
+            <button type="button" className="upload-button" onClick={handleUploadClick}>
+              {imagePreview ? 'Choose Another Image' : 'Choose Image'}
+            </button>
+            <p className="upload-note">The custom button opens the hidden file input through useRef.</p>
+          </section>
+
+          <section className="users-panel">
+            <div className="section-heading">
+              <span className="section-number">02</span>
+              <div>
+                <h2>Directory Users</h2>
+                <p>Fetched from JSONPlaceholder with useEffect.</p>
+              </div>
+            </div>
+
+            {isLoading && <p className="state-message loading-message">Loading users...</p>}
+            {errorMessage && <p className="state-message error-message">{errorMessage}</p>}
+
+            {!isLoading && !errorMessage && (
+              <div className="user-list">
+                {users.map((user) => (
+                  <article className="api-user-card" key={user.id}>
+                    <div className="user-card-topline">
+                      <span className="user-avatar">{user.name.charAt(0)}</span>
+                      <div>
+                        <h3>{user.name}</h3>
+                        <span>@{user.username}</span>
+                      </div>
+                    </div>
+                    <div className="user-info">
+                      <p><strong>Email</strong>{user.email}</p>
+                      <p><strong>Phone</strong>{user.phone}</p>
+                      <p><strong>Website</strong>{user.website}</p>
+                      <p><strong>Company</strong>{user.company.name}</p>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
+          </section>
         </div>
       </section>
     </main>
