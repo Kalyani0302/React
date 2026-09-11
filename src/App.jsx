@@ -1,7 +1,7 @@
-import MiniChat from './components/MiniChat'
+import Task8 from './components/Task8'
 
 function App() {
-  return <MiniChat />
+  return <Task8 />
 }
 
 export default App
